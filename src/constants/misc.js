@@ -113,7 +113,11 @@ module.exports = {
         'Thunderlord 6',
         'Thunderlord VI',
         'Lethality 6',
-        'Lethality VI'
+        'Lethality VI',
+        'Growth 7',
+        'Growth VII',
+        'Protection 7',
+        'Protection VII'
     ],
 
     // Number of kills required for each level of expertise
@@ -128,6 +132,15 @@ module.exports = {
         10000,
         15000
     ],
+
+    // api names and their max value from the profile upgrades
+    profile_upgrades: {
+        'island_size' : 10,
+        'minion_slots' : 5,
+        'guests_count' : 5,
+        'coop_slots' : 3,
+        'coins_allowance' : 5,
+    },
 
     // Player stats on a completely new profile
     base_stats: {
@@ -144,7 +157,8 @@ module.exports = {
         intelligence: 0,
         sea_creature_chance: 20,
         magic_find: 10,
-        pet_luck: 0
+        pet_luck: 0,
+        ferocity: 0
     },
 
     stat_template: {
@@ -161,7 +175,8 @@ module.exports = {
         intelligence: 0,
         sea_creature_chance: 0,
         magic_find: 0,
-        pet_luck: 0
+        pet_luck: 0,
+        ferocity: 0
     },
 
     slayer_cost: {
@@ -434,6 +449,42 @@ module.exports = {
         ],
         TREASURE_RING: [
             'TREASURE_ARTIFACT'
+        ],
+        BEASTMASTER_CREST_COMMON: [
+            'BEASTMASTER_CREST_UNCOMMON',
+            'BEASTMASTER_CREST_RARE',
+            'BEASTMASTER_CREST_EPIC',
+            'BEASTMASTER_CREST_LEGENDARY'
+        ],
+        BEASTMASTER_CREST_UNCOMMON: [
+            'BEASTMASTER_CREST_RARE',
+            'BEASTMASTER_CREST_EPIC',
+            'BEASTMASTER_CREST_LEGENDARY'
+        ],
+        BEASTMASTER_CREST_RARE: [
+            'BEASTMASTER_CREST_EPIC',
+            'BEASTMASTER_CREST_LEGENDARY'
+        ],
+        BEASTMASTER_CREST_EPIC: [
+            'BEASTMASTER_CREST_LEGENDARY'
+        ],
+        RAGGEDY_SHARK_TOOTH_NECKLACE: [
+            'DULL_SHARK_TOOTH_NECKLACE',
+            'HONED_SHARK_TOOTH_NECKLACE',
+            'SHARP_SHARK_TOOTH_NECKLACE',
+            'RAZOR_SHARP_SHARK_TOOTH_NECKLACE'
+        ],
+        DULL_SHARK_TOOTH_NECKLACE: [
+            'HONED_SHARK_TOOTH_NECKLACE',
+            'SHARP_SHARK_TOOTH_NECKLACE',
+            'RAZOR_SHARP_SHARK_TOOTH_NECKLACE'
+        ],
+        HONED_SHARK_TOOTH_NECKLACE: [
+            'SHARP_SHARK_TOOTH_NECKLACE',
+            'RAZOR_SHARP_SHARK_TOOTH_NECKLACE'
+        ],
+        SHARP_SHARK_TOOTH_NECKLACE: [
+            'RAZOR_SHARP_SHARK_TOOTH_NECKLACE'
         ]
     },
 
@@ -932,6 +983,39 @@ module.exports = {
         },
         'TREASURE_ARTIFACT': {
             head: "hmmm"
+        },
+        'MINERAL_TALISMAN': {
+            head: "yes"
+        },
+        'BEASTMASTER_CREST_COMMON': {
+            head: "yes"
+        },
+        'BEASTMASTER_CREST_UNCOMMON': {
+            head: "yes"
+        },
+        'BEASTMASTER_CREST_RARE': {
+            head: "yes"
+        },
+        'BEASTMASTER_CREST_EPIC': {
+            head: "yes"
+        },
+        'BEASTMASTER_CREST_LEGENDARY': {
+            head: "yes"
+        },
+        'RAGGEDY_SHARK_TOOTH_NECKLACE': {
+            head: "yes"
+        },
+        'DULL_SHARK_TOOTH_NECKLACE': {
+            head: "yes"
+        },
+        'HONED_SHARK_TOOTH_NECKLACE': {
+            head: "yes"
+        },
+        'SHARP_SHARK_TOOTH_NECKLACE': {
+            head: "yes"
+        },
+        'RAZOR_SHARP_SHARK_TOOTH_NECKLACE': {
+            head: false
         }
     }
 };

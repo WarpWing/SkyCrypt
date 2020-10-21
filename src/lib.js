@@ -581,6 +581,9 @@ async function getItems(base64, customTextures = false, packs, cacheOnly = false
                     case 'Pet Luck':
                         item.stats.pet_luck = statValue;
                         break;
+                    case 'Ferocity':
+                        item.stats.ferocity = statValue;
+                        break;
                 }
             });
 
@@ -1598,10 +1601,10 @@ module.exports = {
         let killsDeaths = [];
 
         for(let stat in userProfile.stats){
-            if(stat.startsWith("kills_"))
+            if(stat.startsWith("kills_") && userProfile.stats[stat] > 0)
                 killsDeaths.push({ type: 'kills', entityId: stat.replace("kills_", ""), amount: userProfile.stats[stat] });
 
-            if(stat.startsWith("deaths_"))
+            if(stat.startsWith("deaths_") && userProfile.stats[stat] > 0)
                 killsDeaths.push({ type: 'deaths', entityId: stat.replace("deaths_", ""), amount: userProfile.stats[stat] });
         }
 
@@ -1706,7 +1709,7 @@ module.exports = {
         output.uuid = profile.uuid;
         output.skin_data = playerObject.skin_data;
 
-        output.profile = { profile_id: profile.profile_id, cute_name: profile.cute_name };
+        output.profile = { profile_id: profile.profile_id, cute_name: profile.cute_name, game_mode: profile.game_mode };
         output.profiles = {};
 
         for(const sbProfile of allProfiles.filter(a => a.profile_id != profile.profile_id)){
@@ -1716,6 +1719,7 @@ module.exports = {
             output.profiles[sbProfile.profile_id] = {
                 profile_id: sbProfile.profile_id,
                 cute_name: sbProfile.cute_name,
+                game_mode: sbProfile.game_mode,
                 last_updated: {
                     unix: sbProfile.members[profile.uuid].last_save,
                     text: `last played ${moment(sbProfile.members[profile.uuid].last_save).fromNow()}`
@@ -1750,6 +1754,7 @@ module.exports = {
         misc.protector = {};
         misc.damage = {};
         misc.burrows = {};
+        misc.profile_upgrades = {};
         misc.auctions_sell = {};
         misc.auctions_buy = {};
 
@@ -1775,6 +1780,8 @@ module.exports = {
             if(key in userProfile.stats) 
                 misc.burrows[key.replace("mythos_burrows_", "")] = { total: userProfile.stats[key] };
 
+        misc.profile_upgrades = await module.exports.getProfileUpgrades(profile);
+        
         const auctions_buy = ["auctions_bids", "auctions_highest_bid", "auctions_won", "auctions_gold_spent"];
         const auctions_sell = ["auctions_fees", "auctions_gold_earned"];
 
@@ -1963,7 +1970,7 @@ module.exports = {
                             pet.stats[stat] = (pet.stats[stat] || 0) + constants.pet_items[heldItem].stats[stat];
                     if('multStats' in constants.pet_items[heldItem])
                         for(const stat in constants.pet_items[heldItem].multStats)
-                            pet.stats[stat] = (pet.stats[stat] || 0) * constants.pet_items[heldItem].multStats[stat];
+                            if (pet.stats[stat]) { pet.stats[stat] = (pet.stats[stat] || 0) * constants.pet_items[heldItem].multStats[stat] };
                 }
 
                 // push pet lore after held item stats added
@@ -2232,6 +2239,31 @@ module.exports = {
                 object.display_name = "Treasure Artifact"
                 object.rarity = "legendary"
             }
+            if(talisman.startsWith("RAGGEDY_SHARK_TOOTH_NECKLACE")){
+                object.texture_path = "/head/d77309ddebbdc278ee2772d92fa4905dd850c5f213a77ffaed5a67eecb23984a"
+                object.display_name = "Raggedy Shark Tooth Necklace"
+                object.rarity = "common"
+            }
+            if(talisman.startsWith("DULL_SHARK_TOOTH_NECKLACE")){
+                object.texture_path = "/head/f3ab3aa1ade74915dacd298613904361c18877eebfa81d9f936309f271e1389a"
+                object.display_name = "Dull Shark Tooth Necklace"
+                object.rarity = "uncommon"
+            }
+            if(talisman.startsWith("HONED_SHARK_TOOTH_NECKLACE")){
+                object.texture_path = "/head/e6b120938d83bf49ddab3a78666a0bf37a3de7b46b9d97b984da3be62ce3e5e3"
+                object.display_name = "Honed Shark Tooth Necklace"
+                object.rarity = "rare"
+            }
+            if(talisman.startsWith("SHARP_SHARK_TOOTH_NECKLACE")){
+                object.texture_path = "/head/228e3fb6bd9887d60434ccd279ec3e59227826c9a2f8dd9ce9899ea6683d4ee8"
+                object.display_name = "Sharp Shark Tooth Necklace"
+                object.rarity = "epic"
+            }
+            if(talisman.startsWith("RAZOR_SHARP_SHARK_TOOTH_NECKLACE")){
+                object.texture_path = "/head/7792676664ac711488641f72b25961835613da9ffd43ea3bdd163cb365343a6"
+                object.display_name = "Razor Sharp Shark Tooth Necklace"
+                object.rarity = "legendary"
+            }
             if(object.name == null){
                 object.name = talisman;
             }
@@ -2319,6 +2351,8 @@ module.exports = {
         const dungeons = userProfile.dungeons;
         if (dungeons == null || Object.keys(dungeons).length === 0) return output;
 
+        const dungeons_data = constants.dungeons;
+
         for(const type of Object.keys(dungeons.dungeon_types)){
             const dungeon = dungeons.dungeon_types[type];
             if (dungeon == null || Object.keys(dungeon).length === 0) {
@@ -2338,11 +2372,11 @@ module.exports = {
                     };
 
                     let id = `${type}_${floor}`;
-                    if(constants.floors[id]){
-                        if(constants.floors[id].name) 
-                            floors[floor].name = constants.floors[id].name;
-                        if(constants.floors[id].texture) 
-                            floors[floor].icon_texture = constants.floors[id].texture;
+                    if(dungeons_data.floors[id]){
+                        if(dungeons_data.floors[id].name) 
+                            floors[floor].name = dungeons_data.floors[id].name;
+                        if(dungeons_data.floors[id].texture) 
+                            floors[floor].icon_texture = dungeons_data.floors[id].texture;
                     }
                     
                     if(key.startsWith("most_damage")){
@@ -2360,7 +2394,9 @@ module.exports = {
             output[type] = {
                 visited: true,
                 level: getLevelByXp(dungeon.experience, 2),
-                highest_floor: constants.floors[`${type}_${highest_floor}`] && constants.floors[`${type}_${highest_floor}`].name ? constants.floors[`${type}_${highest_floor}`].name : `floor_${highest_floor}`,
+                highest_floor: 
+                    dungeons_data.floors[`${type}_${highest_floor}`] && dungeons_data.floors[`${type}_${highest_floor}`].name 
+                    ? dungeons_data.floors[`${type}_${highest_floor}`].name : `floor_${highest_floor}`,
                 floors: floors
             }
         }
@@ -2384,31 +2420,63 @@ module.exports = {
 
         output.used_classes = used_classes;
 
-        const tasks = userProfile.tutorial;
-        const collection_data = constants.boss_collections;
+        output.selected_class = current_class;
+        output.secrets_found = hypixelProfile.achievements.skyblock_treasure_hunter || 0;
+
+        if (!output.catacombs.visited) return output;
+
+        const collection_data = dungeons_data.boss_collections;
+        const boss_data = dungeons_data.bosses;
         let collections = {};
+
+        for (i in output.catacombs.floors) {
+            let floor_id = `catacombs_${i}`;
+            if (!Object.keys(collection_data).includes(floor_id)) continue;
+
+            let data = output.catacombs.floors[i];
+            if (data.stats.tier_completions == null || data.stats.tier_completions <= 0) continue; 
+
+            let coll = collection_data[floor_id];
+            let boss = boss_data[coll.boss];
+
+            if (!collections[floor_id]) collections[floor_id] = {
+                name: boss.name,
+                texture: boss.texture,
+                tier: 0,
+                maxed: false,
+                killed: data.stats.tier_completions || 0,
+                unclaimed: 0,
+                claimed: []
+            };
+
+            for (reward_id in coll.rewards) {
+                let reward = coll.rewards[reward_id];
+                if (collections[floor_id].killed >= reward.required) {
+                    collections[floor_id].tier = reward.tier;
+                    if(reward_id != "coming_soon") collections[floor_id].unclaimed++;
+                } else break;
+
+                if (collections[floor_id].tier == coll.max_tiers)
+                    collections[floor_id].maxed = true;
+            }
+        }
+
+        const tasks = userProfile.tutorial;
         for (i in tasks) {
             if (!tasks[i].startsWith("boss_collection_claimed")) continue;
             let task = tasks[i].split("_").splice(3);
 
-            if (!Object.keys(collection_data).includes(task[0])) continue;
-            let boss = collection_data[task[0]];
-            let item = boss.rewards[task.splice(1).join('_')];
+            if (!Object.keys(boss_data).includes(task[0])) continue;
+            let boss = boss_data[task[0]];
+
+            if (!Object.keys(collection_data).includes(boss.floor)) continue;
+            let coll = collection_data[boss.floor];
+
+            let item = coll.rewards[task.splice(1).join('_')];
 
             if (item == null || boss == null) continue;
-            if (!collections[boss.floor]) collections[boss.floor] = {
-                name: boss.name,
-                texture: boss.texture,
-                tier: 0,
-                killed: 0,
-                claimed: []
-            };
-
             collections[boss.floor].claimed.push(item.name);
-            if (collections[boss.floor].tier < item.tier) {
-                collections[boss.floor].tier = item.tier;
-                collections[boss.floor].killed = item.required;
-            } 
+            collections[boss.floor].unclaimed--;
         }
 
         if (Object.keys(collections).length === 0) 
@@ -2417,9 +2485,16 @@ module.exports = {
 
         output.boss_collections = collections;
 
-        output.selected_class = current_class;
-        output.secrets_found = hypixelProfile.achievements.skyblock_treasure_hunter || 0;
+        return output;
+    },
 
+    getProfileUpgrades: async (profile) => {
+        const output = {};
+        for (const upgrade in constants.profile_upgrades)
+            output[upgrade] = 0;
+        if (helper.hasPath(profile, 'community_upgrades', 'upgrade_states'))
+            for (const u of profile.community_upgrades.upgrade_states)
+                output[u.upgrade] = Math.max(output[u.upgrade] || 0, u.tier);
         return output;
     },
 
@@ -2586,6 +2661,9 @@ module.exports = {
 
                 if(helper.hasPath(_profile, 'banking'))
                     insertCache.banking = _profile.banking;
+                
+                if(helper.hasPath(_profile, 'community_upgrades'))
+                    insertCache.community_upgrades = _profile.community_upgrades;
 
                 db
                 .collection('profileCache')
@@ -2600,6 +2678,7 @@ module.exports = {
                 storeProfiles[_profile.profile_id] = {
                     profile_id: _profile.profile_id,
                     cute_name: _profile.cute_name,
+                    game_mode: _profile.game_mode,
                     last_save: userProfile.last_save
                 };
         }

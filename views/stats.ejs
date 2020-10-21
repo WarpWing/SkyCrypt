@@ -33,7 +33,8 @@ const statShort = {
     sea_creature_chance: 'ScC',
     magic_find: 'MF',
     pet_luck: 'PL',
-    bonus_attack_speed: 'Atk'
+    bonus_attack_speed: 'Atk',
+    ferocity: 'Frc'
 };
 
 const skillItems = {
@@ -1028,10 +1029,11 @@ twitterDescription += '. Click to view more stats!'
                 </div>
             </div><span class="text-on"> on </span><div tabindex="2" id="stats_for_profile">
                 <%= calculated.profile.cute_name %>
+                <% if(calculated.profile.game_mode == 'ironman'){ %><img src="/resources/img/icons/ironman.png" class="emoji"><% } %>
                 <div id="other_profiles">
                     <% for(let profile_id in calculated.profiles){ %>
                         <% let _profile = calculated.profiles[profile_id]; %>
-                        <a class="goto" href="/stats/<%= calculated.uuid %>/<%= _profile.profile_id %><%= Object.keys(req.query).length > 0 ? '?' + new URLSearchParams(req.query).toString() : '' %>"><%= _profile.cute_name %><div class="goto-last-played"><%= 'last_updated' in _profile ? _profile.last_updated.text : '' %></div></a>
+                        <a class="goto" href="/stats/<%= calculated.uuid %>/<%= _profile.profile_id %><%= Object.keys(req.query).length > 0 ? '?' + new URLSearchParams(req.query).toString() : '' %>"><%= _profile.cute_name %><% if(_profile.game_mode == 'ironman'){ %> <img src="/resources/img/icons/ironman.png" class="emoji"><% } %><div class="goto-last-played"><%= 'last_updated' in _profile ? _profile.last_updated.text : '' %></div></a>
                     <% } %>
                 </div>
             </div>
@@ -1049,6 +1051,7 @@ twitterDescription += '. Click to view more stats!'
                 ">Views: <%= helper.formatNumber(calculated.views.total, true) %></div>
 
                 <% */ %>
+                <div class="additional-player-stat external-icon add-favorite" data-username="<%= calculated.uuid %>"></div>
                 <% if(calculated.guild){ %><div class="additional-player-stat interactive-tooltip" data-tippy-content="
                 <% if(calculated.guild.rank){ %><span class='stat-name'>Rank: </span><span class='stat-value'><%= calculated.guild.rank %></span><br><br><% } %>
                 <span class='stat-name'>Guild Master: </span><a href='/stats/<%= calculated.guild.gm %>' class='no-underline stat-value'><%= calculated.guild.gmUser.display_name %></a><br>
@@ -1165,6 +1168,23 @@ twitterDescription += '. Click to view more stats!'
                     name: 'pet_luck',
                     baseExplanation: "Increased by leveling your Taming Skill."
                 }); %>
+
+                <%- stat_component({
+                    name: 'ferocity',
+                    prettyName: 'Ferocity',
+                    baseExplanation: null,
+                    extraStats: [
+                        {
+                            stat: 'Base Extra Strikes',
+                            value: (stats.ferocity / 100).toFixed(0),
+                        },
+                        {
+                            stat: 'Chance for 1 more',
+                            value: stats.ferocity % 100,
+                            suffix: '%'
+                        }
+                    ]
+                }); %>
                 <!--<div data-stat="fairy_souls" class="basic-stat stat-fairy-souls">
                     <span data-tippy-content="
                         Collect Fairy Souls to gain Health, Defense, Strength and Speed.</div>
@@ -1253,7 +1273,7 @@ twitterDescription += '. Click to view more stats!'
 
             const localizedItems = allItems.some(a => a.localized === true);
         %>
-        <% if(notAvailable.length > 0 || localizedItems){ %>
+        <% if(notAvailable.length > 0 || localizedItems || calculated.profile.game_mode == 'ironman'){ %>
             <div class="stat-container info-container-wrapper">
                 <div class="info-container">
                     <div class="info-header">Notice</div>
@@ -1265,6 +1285,10 @@ twitterDescription += '. Click to view more stats!'
                         This profile has non-english item data caused by the player's Hypixel language settings. Localization is not supported and some features of the site might not be working correctly.<br><br>
                         This can be fixed by changing the language back to English in your ingame player settings, alternatively wait for Hypixel to change API behavior (<a target="_blank" href="https://github.com/HypixelDev/PublicAPI/issues/290">Related GitHub Issue</a>).<br><br>
                         Please don't report bugs until this is resolved.
+                    <% } %>
+                    <% if(calculated.profile.game_mode == 'ironman'){ %>
+                        <% if(notAvailable.length > 0){ %><br><br><% } %>
+                        This is an <strong>Ironman</strong> profile. The player cannot use the Auction House, Bazaar, Trades, or pick up drops from other players.
                     <% } %>
                 </div>
             </div>
@@ -1782,16 +1806,24 @@ twitterDescription += '. Click to view more stats!'
                     <%
                     for(let boss in calculated.dungeons.boss_collections){
                         let collection = calculated.dungeons.boss_collections[boss];
-                        let claimedTooltip = '<span class="stat-name">Claimed items:</span>';
+                        let claimedTooltip = "";
+                        if (collection.claimed.length > 0) {
+                            claimedTooltip += '<span class="stat-name">Claimed items:</span>';
 
-                        for(let item in collection.claimed)
-                            claimedTooltip += `<br><span class="stat-value">${collection.claimed[item]}</span>`;
+                            for(let item in collection.claimed)
+                                claimedTooltip += `<br><span class="stat-value">- ${collection.claimed[item]}</span>`;
+
+                            claimedTooltip += '<br>';
+                        }
+
+                        if (collection.unclaimed > 0) 
+                            claimedTooltip += `<span class="stat-name">Unclaimed items: </span><span class="stat-value">${collection.unclaimed}</span>`;
                     %>
-                    <div class="boss-collection" data-tippy-content="<%= claimedTooltip %>">
+                    <div class="boss-collection" <% if (claimedTooltip != "") { %>data-tippy-content="<%= claimedTooltip %>"<% } %>>
                         <div class="boss-collection-icon" style="background-image:url(/head/<%= collection.texture %>)"></div>
                         <div class="collection-stats">
-                            <div class="collection-name"><span class="stat-name"><%= collection.name %> </span><span class="stat-value"><%= collection.tier %></span></div>
-                            <div class="collection-amount"><span class="stat-name">Bosses killed: </span><span class="stat-value"><%= collection.killed %>+</span></div>
+                            <div class="collection-name <%= collection.maxed ? 'max-minion' : '' %>"><span class="stat-name"><%= collection.name %> </span><% if (collection.tier > 0) { %><span class="stat-value"><%= collection.tier %></span><% } %></div>
+                            <div class="collection-amount"><span class="stat-name">Bosses killed: </span><span class="stat-value"><%= collection.killed.toLocaleString() %></span></div>
                         </div>
                     </div>
                     <% } %>
@@ -2030,6 +2062,7 @@ twitterDescription += '. Click to view more stats!'
                 <p class="stat-raw-values">
                     <% max = uniqueMinions == 572 ? 'golden-text' : '' %><span class="stat-name <%= max %>">Unique Minions: </span><span class="stat-value <%= max %>"><%= uniqueMinions %> / 572</span><span class="grey-text"> (<%= Math.floor(uniqueMinions / 572 * 100) %>%)</span><br>
                     <% max = calculated.minion_slots.currentSlots == 24 ? 'golden-text' : '' %><span class="stat-name <%= max %>">Minion Slots: </span><span class="stat-value <%= max %>""><%= calculated.minion_slots.currentSlots %></span><span class="grey-text"> (<%= calculated.minion_slots.toNextSlot %> to next slot)</span><br>
+                    <% max = calculated.misc.profile_upgrades.minion_slots == 5 ? 'golden-text' : '' %><span class="stat-name <%= max %>">Bonus Minion Slots: </span><span class="stat-value <%= max %>""><%= calculated.misc.profile_upgrades.minion_slots %> / <%= constants.profile_upgrades['minion_slots'] %></span><br>
                     <% max = maxedMinions == _.size(constants.minions) ? 'golden-text' : '' %><span class="stat-name <%= max %>">Maxed Minions: </span><span class="stat-value <%= max %>"><%= maxedMinions %> / <%= _.size(constants.minions) %></span><br>
                     <% if(skippedMinions > 0){ %>
                     <span class="stat-name">Skipped Minion Tiers: </span><span class="stat-value"><%= skippedMinions %></span><br>
@@ -2296,6 +2329,14 @@ twitterDescription += '. Click to view more stats!'
                                         tooltip += `<span class="stat-name piece-${ rarity }-fg">${ helper.capitalizeFirstLetter(rarity) }: </span><span class="stat-value">${ calculated.misc.burrows[key][rarity] }</span><br>`;
                             %>
                                 <span <%- tooltip ? `data-tippy-content='<span class="stat-name">Rarities used:</span><br>${tooltip}'` : "" %>><span class="stat-name"><%= helper.capitalizeFirstLetter(name.split("_").join(" ")); %>: </span><span class="stat-value"><%= calculated.misc.burrows[key].total.toLocaleString() %></span></span><br>
+                            <% } %>
+                        </p>
+                    <% } %>
+                    <% if('profile_upgrades' in calculated.misc){ %>
+                        <div class="minion-category-header"><div class="minion-category-icon"><div class="item-icon icon-154_0"></div></div><span>profile upgrades</span></div>
+                        <p class="stat-raw-values">
+                            <% for(const upgrade in constants.profile_upgrades){ %>
+                            <% max = calculated.misc.profile_upgrades[upgrade] == constants.profile_upgrades[upgrade] ? 'golden-text' : '' %><span class="stat-name <%= max %>"><%= helper.capitalizeFirstLetter(upgrade.split("_").join(" ")); %>: </span><span class="stat-value <%= max %>""><%= calculated.misc.profile_upgrades[upgrade] %> / <%= constants.profile_upgrades[upgrade] %></span><br>
                             <% } %>
                         </p>
                     <% } %>
