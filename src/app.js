@@ -38,6 +38,8 @@ import api from "./api.js";
 import apiv2 from "./apiv2.js";
 import kofi from "./donations/kofi.js";
 
+import cluster from 'cluster';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, "../public/manifest.json")));
@@ -133,7 +135,7 @@ updateCacheOnly();
 setInterval(updateCacheOnly, 60_000 * 5);
 
 const app = express();
-const port = 32464;
+const port = 32464 + cluster.worker.id;
 
 let sitemap;
 
