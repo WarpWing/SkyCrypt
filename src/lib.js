@@ -92,9 +92,8 @@ function getXpByLevel(uncappedLevel, extra = {}) {
     uncappedLevel = 0;
   }
 
-  /** the level that this player is caped at */
-  const levelCap =
-    extra.cap ?? constants.DEFAULT_SKILL_CAPS[extra.skill] ?? Math.max(...Object.keys(xpTable).map((a) => Number(a)));
+  /** the level that this player is capped at */
+  const levelCap = extra.cap ||  (uncappedLevel > (extra.skill in constants.DEFAULT_SKILL_CAPS ? constants.DEFAULT_SKILL_CAPS[extra.skill] : uncappedLevel)) || Math.max(...Object.keys(xpTable));
 
   /** the maximum level that any player can achieve (used for gold progress bars) */
   const maxLevel = constants.MAXED_SKILL_CAPS[extra.skill] ?? levelCap;
